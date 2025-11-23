@@ -153,11 +153,11 @@ export async function startImposterRound(
   const host = await getPlayerBySession(room.id, sessionId);
   assertHost(host);
 
-  if (room.state !== 'LOBBY' && room.state !== 'REVEAL') {
-    throw new Error('Cannot start a new round right now');
-  }
   if (room.state === 'GAME_OVER') {
     throw new Error('Game is over');
+  }
+  if (room.state !== 'LOBBY' && room.state !== 'REVEAL') {
+    throw new Error('Cannot start a new round right now');
   }
 
   const normalizedTopic = normalizeTopic(topic);
@@ -378,7 +378,7 @@ export async function submitImposterVote(
 
   const players = await getPlayers(room.id);
   const aliveCount = players.filter((p) => p.is_alive !== false).length;
-  let roundResult: ImposterRoundResult | undefined;
+  let roundResult: (ImposterRoundResult & { room: ImposterRoom }) | undefined;
 
   if (votes.length >= aliveCount) {
     roundResult = await resolveImposterRound(room, players, votes, code);
