@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState, useCallback } from 'react';
+import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import { getSessionId } from '@/lib/session';
 import { subscribeToRoom, unsubscribeFromRoom } from '@/lib/realtime';
@@ -60,6 +61,33 @@ export default function RoomPage() {
       setError(err instanceof Error ? err.message : 'Failed to load room');
     } finally {
       setIsLoading(false);
+    }
+  }, [code]);
+
+  // Seed state from locally cached room (fast entry for host/join)
+  useEffect(() => {
+    const seedRaw =
+      typeof window !== 'undefined'
+        ? localStorage.getItem(`pregame_room_seed_${code}`)
+        : null;
+    if (!seedRaw) return;
+    try {
+      const seed = JSON.parse(seedRaw) as {
+        room?: Room;
+        players?: Player[];
+        assignments?: Assignment[];
+        ts?: number;
+      };
+      if (!seed.room || !seed.players) return;
+      setRoom(seed.room);
+      setPlayers(seed.players);
+      setAssignments(seed.assignments || []);
+      const sessionId = getSessionId();
+      const player = seed.players.find((p) => p.session_id === sessionId);
+      setCurrentPlayer(player || null);
+      setIsLoading(false);
+    } catch (e) {
+      console.warn('Failed to read room seed', e);
     }
   }, [code]);
 
@@ -196,12 +224,12 @@ export default function RoomPage() {
     return (
       <div className="flex flex-col items-center justify-center min-h-screen p-4 bg-gradient-to-b from-purple-900 to-indigo-900">
         <div className="text-red-400 text-xl mb-4">{error || 'Room not found'}</div>
-        <a
+        <Link
           href="/"
           className="text-purple-300 hover:text-white"
         >
           &larr; Back to home
-        </a>
+        </Link>
       </div>
     );
   }

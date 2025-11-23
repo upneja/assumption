@@ -1,5 +1,6 @@
 'use client';
 
+import { useMemo } from 'react';
 import { Player, Assignment, Vote } from '@/types';
 
 interface RevealViewProps {
@@ -47,6 +48,19 @@ export function RevealView({
     return players.find((p) => p.id === vote.guessed_target_id) || null;
   };
 
+  const confettiBits = useMemo(
+    () =>
+      Array.from({ length: 20 }, (_, i) => ({
+        left: `${(i * 37) % 100}%`,
+        top: `${(i * 61) % 100}%`,
+        color: ['#fbbf24', '#f97316', '#ef4444', '#8b5cf6', '#06b6d4'][i % 5],
+        delay: `${(i % 5) * 0.2}s`,
+        duration: `${2 + (i % 4) * 0.4}s`,
+        id: i,
+      })),
+    []
+  );
+
   return (
     <div className="flex flex-col items-center justify-center min-h-screen p-4 bg-gradient-to-b from-amber-900 via-yellow-900 to-orange-900 overflow-hidden">
       {/* Animated background */}
@@ -57,16 +71,16 @@ export function RevealView({
 
       {/* Confetti-like particles */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        {[...Array(20)].map((_, i) => (
+        {confettiBits.map((bit) => (
           <div
-            key={i}
+            key={bit.id}
             className="absolute w-3 h-3 rounded-full animate-bounce"
             style={{
-              left: `${Math.random() * 100}%`,
-              top: `${Math.random() * 100}%`,
-              backgroundColor: ['#fbbf24', '#f97316', '#ef4444', '#8b5cf6', '#06b6d4'][i % 5],
-              animationDelay: `${Math.random() * 2}s`,
-              animationDuration: `${2 + Math.random() * 2}s`,
+              left: bit.left,
+              top: bit.top,
+              backgroundColor: bit.color,
+              animationDelay: bit.delay,
+              animationDuration: bit.duration,
             }}
           />
         ))}

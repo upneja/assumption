@@ -1,4 +1,4 @@
-// Game phase enum matching database state values
+// Game phase enum matching database state values (Assumptions)
 export type GamePhase =
   | 'LOBBY'
   | 'ASSIGNMENT'
@@ -10,12 +10,29 @@ export type GamePhase =
   | 'SCOREBOARD'
   | 'COMPLETE';
 
+// Imposter-specific phases
+export type ImposterPhase =
+  | 'LOBBY'
+  | 'SETUP'
+  | 'SECRET_REVEAL'
+  | 'CLUE'
+  | 'DISCUSSION'
+  | 'VOTING'
+  | 'REVEAL'
+  | 'GAME_OVER';
+
+export type RoomState = GamePhase | ImposterPhase;
+export type GameType = 'ASSUMPTIONS' | 'IMPOSTER';
+
 // Database row types
 export interface Room {
   id: string;
   code: string;
   host_player_id: string | null;
-  state: GamePhase;
+  state: RoomState;
+  game_type?: GameType;
+  topic?: string | null;
+  secret_word?: string | null;
   round_number: number;
   hotseat_player_id: string | null;
   hotseat_history: string[];
@@ -30,6 +47,8 @@ export interface Player {
   is_host: boolean;
   session_id: string;
   score: number;
+  role?: 'CIVILIAN' | 'IMPOSTER';
+  is_alive?: boolean;
   joined_at: string;
   last_seen_at: string;
 }
@@ -58,6 +77,7 @@ export interface GameState {
 export interface CreateRoomRequest {
   displayName: string;
   sessionId: string;
+  gameType?: GameType;
 }
 
 export interface CreateRoomResponse {
@@ -130,6 +150,39 @@ export interface VoteResults {
   correctVoters: Player[];
   incorrectVoters: Player[];
   actualTargetId: string;
+}
+
+// Imposter models
+export interface ImposterClue {
+  id: string;
+  room_id: string;
+  round_number: number;
+  player_id: string;
+  text: string;
+  created_at: string;
+}
+
+export interface ImposterVote {
+  id: string;
+  room_id: string;
+  round_number: number;
+  voter_id: string;
+  target_id: string;
+  created_at: string;
+}
+
+export interface ImposterRoom extends Room {
+  game_type: 'IMPOSTER';
+  topic: string | null;
+  secret_word: string | null;
+  state: ImposterPhase;
+}
+
+export interface ImposterRoundResult {
+  eliminatedPlayerId: string | null;
+  eliminatedRole: 'IMPOSTER' | 'CIVILIAN' | null;
+  winner: 'CIVILIANS' | 'IMPOSTERS' | null;
+  votes: ImposterVote[];
 }
 
 // Realtime event types

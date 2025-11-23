@@ -1,11 +1,12 @@
 import { supabaseAdmin } from './supabaseServer';
 import { generateRoomCode, assignPlayersRandomly } from './gameEngine';
-import type { Room, Player, Assignment, GamePhase, Vote } from '@/types';
+import type { Room, Player, Assignment, GamePhase, Vote, GameType } from '@/types';
 
 // Create a new room with a host player
 export async function createRoom(
   displayName: string,
-  sessionId: string
+  sessionId: string,
+  gameType: GameType = 'ASSUMPTIONS'
 ): Promise<{ room: Room; player: Player }> {
   // Generate a unique room code
   let code = generateRoomCode();
@@ -34,6 +35,7 @@ export async function createRoom(
     .insert({
       code,
       state: 'LOBBY' as GamePhase,
+      game_type: gameType,
       round_number: 1,
     })
     .select()
@@ -80,7 +82,8 @@ export async function createRoom(
 export async function joinRoom(
   code: string,
   displayName: string,
-  sessionId: string
+  sessionId: string,
+  gameType?: GameType
 ): Promise<{ room: Room; player: Player; players: Player[] }> {
   // Find the room
   const { data: room, error: roomError } = await supabaseAdmin
@@ -91,6 +94,10 @@ export async function joinRoom(
 
   if (roomError || !room) {
     throw new Error('Room not found');
+  }
+
+  if (gameType && room.game_type && room.game_type !== gameType) {
+    throw new Error('This room is for a different game');
   }
 
   if (room.state !== 'LOBBY') {
