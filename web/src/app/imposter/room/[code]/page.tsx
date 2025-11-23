@@ -3,14 +3,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
-import {
-  ImposterClue,
-  ImposterPhase,
-  ImposterRoundResult,
-  ImposterVote,
-  Player,
-  Room,
-} from '@/types';
+import { ImposterPhase, ImposterRoundResult, ImposterVote, Player, Room } from '@/types';
 import { IMPOSTER_TOPICS } from '@/lib/imposter/constants';
 import { getSessionId } from '@/lib/session';
 import { subscribeToImposterRoom, unsubscribeFromRoom } from '@/lib/realtime';
@@ -24,11 +17,9 @@ export default function ImposterRoomPage() {
 
   const [room, setRoom] = useState<Room | null>(null);
   const [players, setPlayers] = useState<Player[]>([]);
-  const [clues, setClues] = useState<ImposterClue[]>([]);
   const [votes, setVotes] = useState<ImposterVote[]>([]);
   const [roundResult, setRoundResult] = useState<ImposterRoundResult | null>(null);
   const [topicChoice, setTopicChoice] = useState<string>(topicList[0]);
-  const [clueInput, setClueInput] = useState('');
   const [isLoading, setIsLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState(false);
   const [error, setError] = useState('');
@@ -39,7 +30,6 @@ export default function ImposterRoomPage() {
     return players.find((p) => p.session_id === sessionId) || null;
   }, [players]);
 
-  const alivePlayers = players.filter((p) => p.is_alive !== false);
   const isHost = currentPlayer?.is_host ?? false;
   const isImposter = currentPlayer?.role === 'IMPOSTER';
 
@@ -51,7 +41,6 @@ export default function ImposterRoomPage() {
       if (!res.ok) throw new Error(data.error || 'Failed to load room');
       setRoom(data.room);
       setPlayers(data.players || []);
-      setClues(data.clues || []);
       setVotes(data.votes || []);
       if (data.roundResult) setRoundResult(data.roundResult);
     } catch (err) {
@@ -66,7 +55,6 @@ export default function ImposterRoomPage() {
     const unsubscribe = subscribeToImposterRoom(code, {
       onRoomUpdate: (updated) => setRoom(updated),
       onPlayersUpdate: (updated) => setPlayers(updated),
-      onCluesUpdate: (updated) => setClues(updated),
       onVotesUpdate: (updated) => setVotes(updated),
       onRoundResult: (result) => setRoundResult(result),
       onError: (err) => console.error(err),
@@ -85,11 +73,9 @@ export default function ImposterRoomPage() {
 
   useEffect(() => {
     if (!room) return;
-    setClues([]);
     setVotes([]);
     setRoundResult(null);
     setHasVoted(false);
-    setClueInput('');
   }, [room]);
 
   const perform = async (endpoint: string, body: Record<string, unknown>) => {
@@ -104,7 +90,6 @@ export default function ImposterRoomPage() {
       if (!res.ok) throw new Error(data.error || 'Action failed');
       if (data.room) setRoom(data.room);
       if (data.players) setPlayers(data.players);
-      if (data.clues) setClues(data.clues);
       if (data.votes) setVotes(data.votes);
       if (data.roundResult) setRoundResult(data.roundResult);
       return data;
@@ -120,27 +105,15 @@ export default function ImposterRoomPage() {
     const sessionId = getSessionId();
     const res = await perform(`/api/imposter/rooms/${code}/start`, { sessionId, topic: topicChoice });
     if (res) {
-      setClues([]);
       setVotes([]);
       setRoundResult(null);
       setHasVoted(false);
-      setClueInput('');
     }
   };
 
   const handleAdvance = async (to: ImposterPhase) => {
     const sessionId = getSessionId();
     await perform(`/api/imposter/rooms/${code}/advance`, { sessionId, to });
-  };
-
-  const handleClueSubmit = async () => {
-    const sessionId = getSessionId();
-    if (!clueInput.trim()) return;
-    const res = await perform(`/api/imposter/rooms/${code}/clue`, {
-      sessionId,
-      text: clueInput.trim(),
-    });
-    if (res) setClueInput('');
   };
 
   const handleVote = async (targetId: string) => {
@@ -292,83 +265,12 @@ export default function ImposterRoomPage() {
         </div>
         {isHost && (
           <button
-            onClick={() => handleAdvance('CLUE')}
-            disabled={actionLoading}
-            className="w-full py-4 rounded-2xl text-lg font-extrabold text-slate-900 tap-pop animate-gradient-bg disabled:opacity-60"
-          >
-            {actionLoading ? 'Moving...' : 'Begin clues'}
-          </button>
-        )}
-      </div>
-    </div>
-  );
-
-  const renderClue = () => {
-    const submittedByCurrent = clues.some((c) => c.player_id === currentPlayer?.id);
-    return (
-      <div className="min-h-screen flex flex-col gap-4 px-4 py-6 max-w-4xl mx-auto">
-        <div className="flex items-center justify-between">
-          <div>
-            <p className="text-xs uppercase tracking-[0.25em] text-slate-400">{room.topic}</p>
-            <h1 className="text-3xl font-black text-white">Drop your clue</h1>
-          </div>
-          <div className="text-sm text-slate-300">
-            {clues.length}/{alivePlayers.length} submitted
-          </div>
-        </div>
-        <div className="neon-card rounded-3xl p-5 border border-white/10 space-y-4">
-          {!isImposter && (
-            <div className="text-slate-300 text-sm">
-              Secret word: <span className="font-bold text-white">{room.secret_word}</span>
-            </div>
-          )}
-          <div className="flex gap-2">
-            <input
-              value={clueInput}
-              onChange={(e) => setClueInput(e.target.value)}
-              placeholder="1-3 words"
-              maxLength={40}
-              className="flex-1 px-4 py-3 rounded-2xl bg-white/10 text-white border border-white/15"
-            />
-            <button
-              onClick={handleClueSubmit}
-              disabled={submittedByCurrent || actionLoading || !clueInput.trim()}
-              className="px-4 py-3 rounded-2xl bg-white text-slate-900 font-bold disabled:opacity-50"
-            >
-              {submittedByCurrent ? 'Submitted' : 'Submit'}
-            </button>
-          </div>
-          <div className="grid sm:grid-cols-2 gap-3">
-            {clues.map((clue) => {
-              const author = players.find((p) => p.id === clue.player_id);
-              return (
-                <div key={clue.id} className="rounded-2xl bg-white/5 border border-white/10 p-3">
-                  <div className="text-white font-semibold">{clue.text}</div>
-                  <div className="text-xs text-slate-400 mt-1">{author?.display_name}</div>
-                </div>
-              );
-            })}
-          </div>
-        </div>
-      </div>
-    );
-  };
-
-  const renderDiscussion = () => (
-    <div className="min-h-screen flex flex-col items-center justify-center px-4 py-6">
-      <div className="neon-card rounded-3xl p-6 border border-white/10 max-w-xl w-full text-center space-y-4">
-        <h1 className="text-3xl font-black text-white">Discuss</h1>
-        <p className="text-slate-200">Talk it out. Grill the sus ones. Host will start voting.</p>
-        {isHost ? (
-          <button
             onClick={() => handleAdvance('VOTING')}
             disabled={actionLoading}
             className="w-full py-4 rounded-2xl text-lg font-extrabold text-slate-900 tap-pop animate-gradient-bg disabled:opacity-60"
           >
-            Start voting
+            {actionLoading ? 'Moving...' : 'Start voting'}
           </button>
-        ) : (
-          <div className="text-slate-300 text-sm">Waiting for host to start voting.</div>
         )}
       </div>
     </div>
@@ -379,11 +281,11 @@ export default function ImposterRoomPage() {
       <div className="flex items-center justify-between">
         <h1 className="text-3xl font-black text-white">Vote the imposter</h1>
         <div className="text-slate-300 text-sm">
-          {votes.length}/{alivePlayers.length} votes in
+          {votes.length}/{players.length} votes in
         </div>
       </div>
       <div className="grid sm:grid-cols-2 md:grid-cols-3 gap-3">
-        {alivePlayers.map((player) => (
+        {players.map((player) => (
           <button
             key={player.id}
             onClick={() => handleVote(player.id)}
@@ -406,22 +308,19 @@ export default function ImposterRoomPage() {
   );
 
   const renderReveal = () => {
-    const eliminated = players.find((p) => p.id === roundResult?.eliminatedPlayerId);
-    const winner = roundResult?.winner;
+    const imposters =
+      roundResult?.imposterIds?.map((id) => players.find((p) => p.id === id)?.display_name).filter(Boolean) || [];
     return (
       <div className="min-h-screen flex flex-col gap-4 px-4 py-6 max-w-4xl mx-auto">
-        <div className="neon-card rounded-3xl p-6 border border-white/10 text-center space-y-3">
-          <h1 className="text-3xl font-black text-white">
-            {winner ? `${winner === 'CIVILIANS' ? 'Civilians' : 'Imposters'} win!` : 'Elimination'}
-          </h1>
-          {eliminated ? (
-            <p className="text-slate-200 text-lg">
-              {eliminated.display_name} was {roundResult?.eliminatedRole === 'IMPOSTER' ? 'an Imposter' : 'a Civilian'}.
-            </p>
-          ) : (
-            <p className="text-slate-200">No one eliminated.</p>
-          )}
-          {!winner && isHost && (
+        <div className="neon-card rounded-3xl p-6 border border-white/10 text-center space-y-4">
+          <h1 className="text-3xl font-black text-white">Round results</h1>
+          <p className="text-slate-200 text-lg">
+            Imposter: <span className="font-bold text-white">{imposters.join(', ') || 'Unknown'}</span>
+          </p>
+          <div className="text-slate-300 text-sm">
+            Correct votes: {roundResult?.correctVoterIds?.length || 0} • Fooled: {roundResult?.incorrectVoterIds?.length || 0}
+          </div>
+          {isHost && (
             <div className="flex flex-col gap-2 items-center">
               <select
                 value={topicChoice}
@@ -441,11 +340,6 @@ export default function ImposterRoomPage() {
               >
                 {actionLoading ? 'Starting...' : 'Next round'}
               </button>
-            </div>
-          )}
-          {winner && (
-            <div className="text-slate-200">
-              Thanks for playing. Host can spin up a new room to go again.
             </div>
           )}
         </div>
@@ -473,13 +367,11 @@ export default function ImposterRoomPage() {
             {players.map((player) => (
               <div
                 key={player.id}
-                className={`p-3 rounded-2xl border border-white/10 ${
-                  player.is_alive === false ? 'opacity-60' : ''
-                }`}
+                className="p-3 rounded-2xl border border-white/10"
               >
                 <div className="text-white font-semibold">{player.display_name}</div>
                 <div className="text-xs text-slate-400">
-                  {player.role || 'Unknown'} - {player.is_alive === false ? 'Eliminated' : 'Alive'}
+                  {player.role || 'Unknown'} • Score: {player.score ?? 0}
                 </div>
               </div>
             ))}
@@ -504,20 +396,6 @@ export default function ImposterRoomPage() {
           {renderSecretReveal()}
         </>
       );
-    case 'CLUE':
-      return (
-        <>
-          {renderTopNav()}
-          {renderClue()}
-        </>
-      );
-    case 'DISCUSSION':
-      return (
-        <>
-          {renderTopNav()}
-          {renderDiscussion()}
-        </>
-      );
     case 'VOTING':
       return (
         <>
@@ -526,7 +404,6 @@ export default function ImposterRoomPage() {
         </>
       );
     case 'REVEAL':
-    case 'GAME_OVER':
       return (
         <>
           {renderTopNav()}

@@ -14,7 +14,7 @@ export async function GET(
 
     const { room, players, clues, votes } = await getImposterRoom(code);
     let roundResult: ImposterRoundResult | null = null;
-    if (room.state === 'REVEAL' || room.state === 'GAME_OVER') {
+    if (room.state === 'REVEAL') {
       roundResult = summarizeImposterRound(room, players, votes);
     }
 

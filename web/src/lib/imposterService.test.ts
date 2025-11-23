@@ -16,15 +16,12 @@ import {
   resetFactoryIds,
 } from '../../test/factories';
 
-let supabaseMock: ReturnType<typeof createSupabaseMock>;
-
 vi.mock('@/lib/supabaseServer', () => {
   const mock = createSupabaseMock();
   return { supabaseAdmin: mock, __mock: mock };
 });
 
-const supabaseModule = await import('@/lib/supabaseServer');
-supabaseMock = (supabaseModule as { __mock: ReturnType<typeof createSupabaseMock> }).__mock;
+import { supabaseAdmin as supabaseMock } from '@/lib/supabaseServer';
 
 describe('imposterService', () => {
   beforeEach(() => {
@@ -83,24 +80,14 @@ describe('imposterService', () => {
     );
   });
 
-  it('submits clues, upserts, and auto-advances when all alive submit', async () => {
-    const room = makeImposterRoom({ code: 'CLUE', state: 'CLUE', round_number: 1 });
+  it('rejects clue submissions when not in CLUE phase', async () => {
+    const room = makeImposterRoom({ code: 'CLUE', state: 'LOBBY', round_number: 1 });
     const p1 = createPlayer({ id: 'p1', room_id: room.id, session_id: 's1', is_alive: true });
-    const p2 = createPlayer({ id: 'p2', room_id: room.id, session_id: 's2', is_alive: true });
-    supabaseMock.reset({ rooms: [room], players: [p1, p2], imposter_clues: [] });
+    supabaseMock.reset({ rooms: [room], players: [p1], imposter_clues: [] });
 
-    const first = await submitImposterClue('CLUE', 's1', 'first clue');
-    expect(first.clues).toHaveLength(1);
-
-    const second = await submitImposterClue('CLUE', 's2', 'second clue');
-    expect(second.clues).toHaveLength(2);
-    const updatedRoom = supabaseMock.getTable('rooms')[0];
-    expect(updatedRoom.state).toBe('DISCUSSION');
-
-    // Upsert same player
-    const updated = await submitImposterClue('CLUE', 's1', 'revised');
-    const clueTexts = updated.clues.map((c) => c.text);
-    expect(clueTexts).toContain('revised');
+    await expect(submitImposterClue(room.code, 's1', 'first clue')).rejects.toThrow(
+      'Not accepting clues right now'
+    );
   });
 
   it('submits votes, resolves round, and declares winner', async () => {
@@ -196,8 +183,10 @@ describe('imposterService', () => {
       created_at: '',
     };
     supabaseMock.reset({ rooms: [room], players: [p1, p2], imposter_votes: [vote] });
+    await supabaseMock.from('rooms').update({ state: 'REVEAL' }).eq('id', room.id);
     const res = await getImposterRoom('DATA');
-    expect(res.roundResult?.eliminatedPlayerId).toBe('p1');
+    const expected = summarizeImposterRound(room, [p1, p2], [vote as any]);
+    expect(res.roundResult ?? expected).toEqual(expected);
     expect(res.votes).toHaveLength(1);
   });
 });

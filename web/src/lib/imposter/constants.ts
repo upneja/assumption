@@ -93,6 +93,5 @@ export function getRandomWord(topic: string): string {
 }
 
 export function getImposterCount(playerCount: number): number {
-  if (playerCount >= 8) return 2;
   return 1;
 }

@@ -27,43 +27,17 @@ function normalizeTopic(topic: string): string {
   return entry;
 }
 
-function tallyElimination(
-  votes: ImposterVote[]
-): { eliminatedPlayerId: string | null; tie: boolean } {
-  if (!votes.length) return { eliminatedPlayerId: null, tie: false };
-  const counts = votes.reduce<Record<string, number>>((acc, vote) => {
-    acc[vote.target_id] = (acc[vote.target_id] || 0) + 1;
-    return acc;
-  }, {});
-
-  const sorted = Object.entries(counts).sort((a, b) => b[1] - a[1]);
-  if (sorted.length === 0) return { eliminatedPlayerId: null, tie: false };
-  const [topId, topCount] = sorted[0];
-  const ties = sorted.filter(([, count]) => count === topCount).map(([id]) => id);
-  if (ties.length === 1) {
-    return { eliminatedPlayerId: topId, tie: false };
-  }
-  const randomIdx = Math.floor(Math.random() * ties.length);
-  return { eliminatedPlayerId: ties[randomIdx], tie: true };
-}
-
-async function assignImposterRoles(roomId: string, players: Player[], resetAlive: boolean) {
+async function assignImposterRoles(roomId: string, players: Player[]) {
   const impostersNeeded = getImposterCount(players.length);
   const shuffled = [...players].sort(() => Math.random() - 0.5);
   const imposterIds = shuffled.slice(0, impostersNeeded).map((p) => p.id);
   const civilianIds = shuffled.slice(impostersNeeded).map((p) => p.id);
 
   if (imposterIds.length) {
-    await supabaseAdmin
-      .from('players')
-      .update({ role: 'IMPOSTER', is_alive: resetAlive ? true : undefined })
-      .in('id', imposterIds);
+    await supabaseAdmin.from('players').update({ role: 'IMPOSTER' }).in('id', imposterIds);
   }
   if (civilianIds.length) {
-    await supabaseAdmin
-      .from('players')
-      .update({ role: 'CIVILIAN', is_alive: resetAlive ? true : undefined })
-      .in('id', civilianIds);
+    await supabaseAdmin.from('players').update({ role: 'CIVILIAN' }).in('id', civilianIds);
   }
 }
 
@@ -153,9 +127,6 @@ export async function startImposterRound(
   const host = await getPlayerBySession(room.id, sessionId);
   assertHost(host);
 
-  if (room.state === 'GAME_OVER') {
-    throw new Error('Game is over');
-  }
   if (room.state !== 'LOBBY' && room.state !== 'REVEAL') {
     throw new Error('Cannot start a new round right now');
   }
@@ -167,10 +138,8 @@ export async function startImposterRound(
     throw new Error('Need at least 3 players to start');
   }
 
-  // Assign roles on first round and reset alive flags
-  if (room.state === 'LOBBY') {
-    await assignImposterRoles(room.id, players, true);
-  }
+  // Assign roles fresh each round
+  await assignImposterRoles(room.id, players);
 
   const secretWord = getRandomWord(normalizedTopic);
   const nextRound = room.state === 'LOBBY' ? 1 : room.round_number + 1;
@@ -211,14 +180,10 @@ export async function advanceImposterPhase(
   assertHost(host);
 
   const validTransitions: Record<ImposterPhase, ImposterPhase[]> = {
-    LOBBY: ['SECRET_REVEAL', 'SETUP'],
-    SETUP: ['SECRET_REVEAL'],
-    SECRET_REVEAL: ['CLUE'],
-    CLUE: ['DISCUSSION'],
-    DISCUSSION: ['VOTING'],
+    LOBBY: ['SECRET_REVEAL'],
+    SECRET_REVEAL: ['VOTING'],
     VOTING: ['REVEAL'],
-    REVEAL: ['SETUP', 'GAME_OVER'],
-    GAME_OVER: [],
+    REVEAL: ['SECRET_REVEAL'],
   };
 
   const allowed = validTransitions[room.state as ImposterPhase] || [];
@@ -248,57 +213,8 @@ export async function submitImposterClue(
 ): Promise<{ room: ImposterRoom; clues: ImposterClue[] }> {
   const room = await getRoomByCode(code);
   if (!room) throw new Error('Room not found');
-  if (room.state !== 'CLUE') {
-    throw new Error('Not accepting clues right now');
-  }
-
-  const player = await getPlayerBySession(room.id, sessionId);
-  if (!player || player.is_alive === false) {
-    throw new Error('Player not found or eliminated');
-  }
-
-  // Upsert clue so players can edit once
-  const { data: existing } = await supabaseAdmin
-    .from('imposter_clues')
-    .select('id')
-    .eq('room_id', room.id)
-    .eq('round_number', room.round_number)
-    .eq('player_id', player.id)
-    .single();
-
-  if (existing) {
-    await supabaseAdmin
-      .from('imposter_clues')
-      .update({ text })
-      .eq('id', existing.id);
-  } else {
-    await supabaseAdmin
-      .from('imposter_clues')
-      .insert({
-        room_id: room.id,
-        round_number: room.round_number,
-        player_id: player.id,
-        text,
-      });
-  }
-
-  const clues = await getCluesForRound(room.id, room.round_number);
-  const players = await getPlayers(room.id);
-  const aliveCount = players.filter((p) => p.is_alive !== false).length;
-  const submittedCount = clues.length;
-
-  // If all alive players submitted, move to DISCUSSION
-  if (submittedCount >= aliveCount) {
-    await supabaseAdmin
-      .from('rooms')
-      .update({ state: 'DISCUSSION' })
-      .eq('id', room.id);
-    room.state = 'DISCUSSION';
-    await broadcastToRoom(code, 'imposter_room_updated', { room });
-  }
-
-  await broadcastToRoom(code, 'imposter_clues_updated', { clues });
-  return { room, clues };
+  // Clues are handled offline; keep endpoint for compatibility
+  return { room, clues: [] };
 }
 
 export async function startImposterVoting(
@@ -310,8 +226,8 @@ export async function startImposterVoting(
   const host = await getPlayerBySession(room.id, sessionId);
   assertHost(host);
 
-  if (room.state !== 'DISCUSSION') {
-    throw new Error('Not in discussion');
+  if (room.state !== 'SECRET_REVEAL') {
+    throw new Error('Not ready to vote');
   }
 
   const { data: updatedRoom, error } = await supabaseAdmin
@@ -341,8 +257,8 @@ export async function submitImposterVote(
   }
 
   const voter = await getPlayerBySession(room.id, sessionId);
-  if (!voter || voter.is_alive === false) {
-    throw new Error('Player not found or eliminated');
+  if (!voter) {
+    throw new Error('Player not found');
   }
   if (voter.id === targetId) {
     throw new Error('Cannot vote for yourself');
@@ -377,10 +293,9 @@ export async function submitImposterVote(
   await broadcastToRoom(code, 'imposter_votes_updated', { votes });
 
   const players = await getPlayers(room.id);
-  const aliveCount = players.filter((p) => p.is_alive !== false).length;
   let roundResult: (ImposterRoundResult & { room: ImposterRoom }) | undefined;
 
-  if (votes.length >= aliveCount) {
+  if (votes.length >= players.length) {
     roundResult = await resolveImposterRound(room, players, votes, code);
   }
 
@@ -397,34 +312,34 @@ async function resolveImposterRound(
   votes: ImposterVote[],
   code: string
 ): Promise<ImposterRoundResult & { room: ImposterRoom; players: Player[] }> {
-  const { eliminatedPlayerId } = tallyElimination(votes);
+  const imposters = players.filter((p) => p.role === 'IMPOSTER');
+  const imposterIds = imposters.map((p) => p.id);
+  const correctVoterIds = votes.filter((v) => imposterIds.includes(v.target_id)).map((v) => v.voter_id);
+  const incorrectVoterIds = votes
+    .filter((v) => !imposterIds.includes(v.target_id))
+    .map((v) => v.voter_id);
 
-  if (eliminatedPlayerId) {
-    await supabaseAdmin
-      .from('players')
-      .update({ is_alive: false })
-      .eq('id', eliminatedPlayerId);
+  for (const voterId of correctVoterIds) {
+    await incrementScore(voterId, 1);
+  }
+  if (incorrectVoterIds.length) {
+    for (const imposterId of imposterIds) {
+      await incrementScore(imposterId, incorrectVoterIds.length);
+    }
   }
 
   const updatedPlayers = await getPlayers(room.id);
-  const impostersAlive = updatedPlayers.filter(
-    (p) => p.role === 'IMPOSTER' && p.is_alive !== false
-  ).length;
-  const civiliansAlive = updatedPlayers.filter(
-    (p) => p.role !== 'IMPOSTER' && p.is_alive !== false
-  ).length;
 
-  let winner: 'CIVILIANS' | 'IMPOSTERS' | null = null;
-  if (impostersAlive === 0) {
-    winner = 'CIVILIANS';
-  } else if (impostersAlive >= civiliansAlive) {
-    winner = 'IMPOSTERS';
-  }
+  const result: ImposterRoundResult = {
+    imposterIds,
+    correctVoterIds,
+    incorrectVoterIds,
+    votes,
+  };
 
-  const nextState: ImposterPhase = winner ? 'GAME_OVER' : 'REVEAL';
   const { data: updatedRoom, error } = await supabaseAdmin
     .from('rooms')
-    .update({ state: nextState })
+    .update({ state: 'REVEAL' })
     .eq('id', room.id)
     .select()
     .single();
@@ -432,15 +347,6 @@ async function resolveImposterRound(
   if (error || !updatedRoom) {
     throw new Error(`Failed to finalize round: ${error?.message}`);
   }
-
-  const result: ImposterRoundResult = {
-    eliminatedPlayerId: eliminatedPlayerId || null,
-    eliminatedRole: eliminatedPlayerId
-      ? updatedPlayers.find((p) => p.id === eliminatedPlayerId)?.role || null
-      : null,
-    winner,
-    votes,
-  };
 
   await broadcastToRoom(code, 'imposter_room_updated', { room: updatedRoom });
   await broadcastToRoom(code, 'imposter_players_updated', { players: updatedPlayers });
@@ -454,20 +360,32 @@ export function summarizeImposterRound(
   players: Player[],
   votes: ImposterVote[]
 ): ImposterRoundResult {
-  const { eliminatedPlayerId } = tallyElimination(votes);
-  const eliminatedPlayer = players.find((p) => p.id === eliminatedPlayerId) || null;
-  const impostersAlive = players.filter(
-    (p) => p.role === 'IMPOSTER' && p.is_alive !== false
-  ).length;
-  let winner: 'CIVILIANS' | 'IMPOSTERS' | null = null;
-  if (room.state === 'GAME_OVER') {
-    winner = impostersAlive === 0 ? 'CIVILIANS' : 'IMPOSTERS';
-  }
+  const imposters = players.filter((p) => p.role === 'IMPOSTER');
+  const imposterIds = imposters.map((p) => p.id);
+  const correctVoterIds = votes.filter((v) => imposterIds.includes(v.target_id)).map((v) => v.voter_id);
+  const incorrectVoterIds = votes
+    .filter((v) => !imposterIds.includes(v.target_id))
+    .map((v) => v.voter_id);
 
   return {
-    eliminatedPlayerId: eliminatedPlayerId || null,
-    eliminatedRole: eliminatedPlayer?.role || null,
-    winner,
+    imposterIds,
+    correctVoterIds,
+    incorrectVoterIds,
     votes,
   };
+}
+
+async function incrementScore(playerId: string, scoreIncrement: number) {
+  const { data: player } = await supabaseAdmin
+    .from('players')
+    .select('score')
+    .eq('id', playerId)
+    .single();
+
+  if (player) {
+    await supabaseAdmin
+      .from('players')
+      .update({ score: (player.score || 0) + scoreIncrement })
+      .eq('id', playerId);
+  }
 }

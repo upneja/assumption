@@ -105,6 +105,13 @@ class QueryBuilder {
       });
     });
   }
+
+  then<TResult1 = any, TResult2 = never>(
+    onfulfilled?: ((value: { data: Row[]; error: null }) => TResult1 | PromiseLike<TResult1>) | null,
+    onrejected?: ((reason: unknown) => TResult2 | PromiseLike<TResult2>) | null
+  ) {
+    return this.execute(false).then(onfulfilled, onrejected);
+  }
 }
 
 interface BroadcastRecord {
@@ -121,6 +128,12 @@ export class SupabaseMock {
 
   constructor(initial?: Record<string, Row[]>) {
     this.reset(initial);
+  }
+
+  private ensureTable(table: string) {
+    if (!this.tables[table]) {
+      this.tables[table] = [];
+    }
   }
 
   reset(initial?: Record<string, Row[]>) {

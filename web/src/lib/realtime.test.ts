@@ -1,79 +1,61 @@
 import { vi } from 'vitest';
 import { subscribeToRoom, subscribeToImposterRoom, unsubscribeFromRoom } from './realtime';
 
-let listeners: Record<string, ((payload: any) => void)[]>;
-let removeChannel: ReturnType<typeof vi.fn>;
-let send: ReturnType<typeof vi.fn>;
-let channel: any;
-let supabase: any;
-let getSubscribeCallback: () => ((status: string) => void) | null;
-let setSubscribeCallback: (cb: ((status: string) => void) | null) => void;
+const store = vi.hoisted(() => ({
+  listeners: {} as Record<string, ((payload: any) => void)[]>,
+  subscribeCallback: null as ((status: string) => void) | null,
+  removeChannel: vi.fn(),
+  send: vi.fn(),
+  channel: null as any,
+  supabase: null as any,
+}));
 
 vi.mock('@/lib/supabaseClient', () => {
-  listeners = {};
-  let subscribeCallback: ((status: string) => void) | null = null;
-  removeChannel = vi.fn();
-  send = vi.fn(async ({ event, payload }: { event: string; payload: any }) => {
-    listeners[event]?.forEach((handler) => handler({ payload }));
+  store.listeners = {};
+  store.subscribeCallback = null;
+  store.removeChannel = vi.fn();
+  store.send = vi.fn(async ({ event, payload }: { event: string; payload: any }) => {
+    store.listeners[event]?.forEach((handler) => handler({ payload }));
     return { status: 'ok' };
   });
-  channel = {
+  store.channel = {
     on: vi.fn((_type: string, filter: { event: string }, handler: any) => {
-      listeners[filter.event] = listeners[filter.event] || [];
-      listeners[filter.event].push(handler);
-      return channel;
+      store.listeners[filter.event] = store.listeners[filter.event] || [];
+      store.listeners[filter.event].push(handler);
+      return store.channel;
     }),
     subscribe: vi.fn((cb?: (status: string) => void) => {
-      subscribeCallback = cb || null;
+      store.subscribeCallback = cb || null;
       cb?.('SUBSCRIBED');
       return { status: 'SUBSCRIBED' };
     }),
-    send,
+    send: store.send,
   };
-  supabase = {
-    channel: vi.fn(() => channel),
-    removeChannel,
+  store.supabase = {
+    channel: vi.fn(() => store.channel),
+    removeChannel: store.removeChannel,
   };
-  getSubscribeCallback = () => subscribeCallback;
-  setSubscribeCallback = (cb) => {
-    subscribeCallback = cb;
-  };
+
   return {
-    supabase,
-    __mocks: {
-      listeners,
-      channel,
-      removeChannel,
-      send,
-      getSubscribeCallback,
-      setSubscribeCallback,
-    },
+    supabase: store.supabase,
+    __mocks: store,
   };
 });
 
 const supabaseModule = await import('@/lib/supabaseClient');
-const realtimeMocks = (supabaseModule as {
-  __mocks: {
-    listeners: typeof listeners;
-    channel: any;
-    removeChannel: typeof removeChannel;
-    send: typeof send;
-    getSubscribeCallback: typeof getSubscribeCallback;
-    setSubscribeCallback: typeof setSubscribeCallback;
-  };
-}).__mocks;
+const realtimeMocks = (supabaseModule as { __mocks: typeof store }).__mocks;
 
 describe('realtime', () => {
   beforeEach(() => {
     Object.keys(realtimeMocks.listeners).forEach((key) => delete realtimeMocks.listeners[key]);
     vi.clearAllMocks();
-    realtimeMocks.setSubscribeCallback(null);
+    realtimeMocks.subscribeCallback = null;
   });
 
   it('subscribes and dispatches room updates', () => {
     const onRoomUpdate = vi.fn();
     const unsubscribe = subscribeToRoom('ROOM', { onRoomUpdate });
-    expect(supabase.channel).toHaveBeenCalledWith('room:ROOM', expect.anything());
+    expect(realtimeMocks.supabase.channel).toHaveBeenCalledWith('room:ROOM', expect.anything());
 
     realtimeMocks.listeners['room_updated']?.[0]?.({ payload: { room: { id: 'r1' } } });
     expect(onRoomUpdate).toHaveBeenCalledWith({ id: 'r1' });
@@ -94,7 +76,7 @@ describe('realtime', () => {
   it('calls error callback on channel error', () => {
     const onError = vi.fn();
     subscribeToRoom('ROOM', { onError });
-    realtimeMocks.getSubscribeCallback()?.('CHANNEL_ERROR');
+    realtimeMocks.subscribeCallback?.('CHANNEL_ERROR');
     expect(onError).toHaveBeenCalledWith(new Error('Failed to connect to realtime channel'));
   });
 });

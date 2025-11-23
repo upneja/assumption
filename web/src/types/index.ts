@@ -13,13 +13,9 @@ export type GamePhase =
 // Imposter-specific phases
 export type ImposterPhase =
   | 'LOBBY'
-  | 'SETUP'
   | 'SECRET_REVEAL'
-  | 'CLUE'
-  | 'DISCUSSION'
   | 'VOTING'
-  | 'REVEAL'
-  | 'GAME_OVER';
+  | 'REVEAL';
 
 export type RoomState = GamePhase | ImposterPhase;
 export type GameType = 'ASSUMPTIONS' | 'IMPOSTER';
@@ -179,9 +175,9 @@ export interface ImposterRoom extends Room {
 }
 
 export interface ImposterRoundResult {
-  eliminatedPlayerId: string | null;
-  eliminatedRole: 'IMPOSTER' | 'CIVILIAN' | null;
-  winner: 'CIVILIANS' | 'IMPOSTERS' | null;
+  imposterIds: string[];
+  correctVoterIds: string[];
+  incorrectVoterIds: string[];
   votes: ImposterVote[];
 }
 

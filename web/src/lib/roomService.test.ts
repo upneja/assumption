@@ -14,15 +14,12 @@ import {
   updateRoomState,
 } from './roomService';
 
-let supabaseMock: ReturnType<typeof createSupabaseMock>;
-
 vi.mock('@/lib/supabaseServer', () => {
   const mock = createSupabaseMock();
   return { supabaseAdmin: mock, __mock: mock };
 });
 
-const supabaseModule = await import('@/lib/supabaseServer');
-supabaseMock = (supabaseModule as { __mock: ReturnType<typeof createSupabaseMock> }).__mock;
+import { supabaseAdmin as supabaseMock } from '@/lib/supabaseServer';
 
 describe('roomService', () => {
   beforeEach(() => {
