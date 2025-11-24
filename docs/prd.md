@@ -1,10 +1,35 @@
 # Assumptions — Product Requirements Document (PRD)
 
-**Tagline:**  
+> **⚠️ HISTORICAL DOCUMENT - READ THIS FIRST**
+>
+> This PRD represents the **original product vision** from initial development (2023).
+> Many features described here are now implemented, while others remain future work.
+>
+> **For current implementation details, see:**
+> - **Game flows:** [GAME_FLOWS.md](GAME_FLOWS.md) - Accurate state machines and phase descriptions
+> - **System architecture:** [ARCHITECTURE.md](ARCHITECTURE.md) - Complete technical design
+> - **API documentation:** [API_REFERENCE.md](API_REFERENCE.md) - All implemented endpoints
+> - **Development guide:** [DEVELOPMENT.md](DEVELOPMENT.md) - Setup and workflow
+>
+> **This document is preserved for:**
+> - Future feature planning and product vision
+> - Understanding original design intent
+> - Reference for unimplemented features
+>
+> **Changes since initial PRD:**
+> - ✅ MVP fully implemented (with extensions)
+> - ✅ Added VOTING and REVEAL phases (not in original MVP)
+> - ✅ Built entire Imposter game (not in original PRD)
+> - ✅ Upgraded to Next.js 16 and React 19
+> - 🚧 Future features (question packs, avatars, timers) not yet implemented
+>
+> ---
+
+**Tagline:**
 *Kahoot meets Jackbox in a browser-based IRL game for mutuals to get to know each other.*
 
-This PRD describes the **full vision** and the **MVP scope**.  
-Claude Code should **only implement MVP now**, but must understand all future phases.
+This PRD describes the **full vision** and the **original MVP scope**.
+**Note:** The MVP described below has been fully implemented and extended. See note above for current state.
 
 ---
 
