@@ -181,9 +181,11 @@ export async function advanceImposterPhase(
 
   const validTransitions: Record<ImposterPhase, ImposterPhase[]> = {
     LOBBY: ['SECRET_REVEAL'],
-    SECRET_REVEAL: ['VOTING'],
+    SECRET_REVEAL: ['CLUE', 'VOTING'],
+    CLUE: ['VOTING'],
     VOTING: ['REVEAL'],
     REVEAL: ['SECRET_REVEAL'],
+    GAME_OVER: [],
   };
 
   const allowed = validTransitions[room.state as ImposterPhase] || [];
@@ -213,6 +215,9 @@ export async function submitImposterClue(
 ): Promise<{ room: ImposterRoom; clues: ImposterClue[] }> {
   const room = await getRoomByCode(code);
   if (!room) throw new Error('Room not found');
+  if (room.state !== 'CLUE') {
+    throw new Error('Not accepting clues right now');
+  }
   // Clues are handled offline; keep endpoint for compatibility
   return { room, clues: [] };
 }
@@ -319,6 +324,30 @@ async function resolveImposterRound(
     .filter((v) => !imposterIds.includes(v.target_id))
     .map((v) => v.voter_id);
 
+  // Count votes for each player
+  const voteCounts = new Map<string, number>();
+  for (const vote of votes) {
+    voteCounts.set(vote.target_id, (voteCounts.get(vote.target_id) || 0) + 1);
+  }
+
+  // Find player with most votes
+  let maxVotes = 0;
+  let eliminatedPlayerId: string | null = null;
+  for (const [playerId, count] of voteCounts.entries()) {
+    if (count > maxVotes) {
+      maxVotes = count;
+      eliminatedPlayerId = playerId;
+    }
+  }
+
+  // Mark eliminated player as dead
+  if (eliminatedPlayerId) {
+    await supabaseAdmin
+      .from('players')
+      .update({ is_alive: false })
+      .eq('id', eliminatedPlayerId);
+  }
+
   for (const voterId of correctVoterIds) {
     await incrementScore(voterId, 1);
   }
@@ -330,16 +359,23 @@ async function resolveImposterRound(
 
   const updatedPlayers = await getPlayers(room.id);
 
+  // Determine winner and eliminated role
+  const eliminatedPlayer = updatedPlayers.find((p) => p.id === eliminatedPlayerId);
+  const eliminatedRole = eliminatedPlayer?.role;
+  const winner = eliminatedRole === 'IMPOSTER' ? 'CIVILIANS' : eliminatedRole === 'CIVILIAN' ? 'IMPOSTERS' : undefined;
+
   const result: ImposterRoundResult = {
     imposterIds,
     correctVoterIds,
     incorrectVoterIds,
     votes,
+    winner,
+    eliminatedRole,
   };
 
   const { data: updatedRoom, error } = await supabaseAdmin
     .from('rooms')
-    .update({ state: 'REVEAL' })
+    .update({ state: 'GAME_OVER' })
     .eq('id', room.id)
     .select()
     .single();
@@ -367,11 +403,18 @@ export function summarizeImposterRound(
     .filter((v) => !imposterIds.includes(v.target_id))
     .map((v) => v.voter_id);
 
+  // Determine who was eliminated based on is_alive status
+  const eliminatedPlayer = players.find((p) => p.is_alive === false);
+  const eliminatedRole = eliminatedPlayer?.role;
+  const winner = eliminatedRole === 'IMPOSTER' ? 'CIVILIANS' : eliminatedRole === 'CIVILIAN' ? 'IMPOSTERS' : undefined;
+
   return {
     imposterIds,
     correctVoterIds,
     incorrectVoterIds,
     votes,
+    winner,
+    eliminatedRole,
   };
 }
 

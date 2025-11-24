@@ -15,4 +15,16 @@ describe('imposter constants', () => {
     expect(getImposterCount(3)).toBe(1);
     expect(getImposterCount(8)).toBe(2);
   });
+
+  it('computes imposter counts for various player sizes', () => {
+    expect(getImposterCount(3)).toBe(1);
+    expect(getImposterCount(4)).toBe(1);
+    expect(getImposterCount(5)).toBe(1);
+    expect(getImposterCount(6)).toBe(1);
+    expect(getImposterCount(7)).toBe(1);
+    expect(getImposterCount(8)).toBe(2);
+    expect(getImposterCount(9)).toBe(2);
+    expect(getImposterCount(10)).toBe(2);
+    expect(getImposterCount(15)).toBe(2);
+  });
 });
