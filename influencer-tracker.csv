@@ -1,0 +1,73 @@
+Creator Name,TikTok Handle,Follower Count,Avg Likes Per Video,Avg Comments Per Video,Engagement Rate (%),Content Type,Last Post Date,Contact Status,DM Sent Date,Response Date,Notes,Priority,Promo Code,Code Uses,Games Played
+Example Creator 1,@examplecreator1,45000,3500,120,8.04,College Party Content,2025-01-20,DM Sent,2025-01-18,,Great engagement - posts 3x/week,High,EXAMPLE1,0,0
+Example Creator 2,@examplecreator2,28000,1800,85,6.73,Imposter Game Videos,2025-01-22,Not Contacted,,,Similar content to our game,High,,,
+Example Creator 3,@examplecreator3,67000,4200,150,6.49,Greek Life Content,2025-01-21,Responded - Interested,2025-01-15,2025-01-16,Wants custom question pack for sorority,High,EXAMPLE3,0,0
+Example Creator 4,@examplecreator4,15000,950,45,6.63,Friend Group Vlogs,2025-01-19,Posted Content,2025-01-10,2025-01-11,Posted video - got 12K views!,Medium,EXAMPLE4,23,67
+Example Creator 5,@examplecreator5,92000,5500,200,6.20,College Lifestyle,2025-01-23,No Response - Follow Up Sent,2025-01-14,,"Sent DM, no response. Follow-up sent 01/18",Medium,,,
+
+INSTRUCTIONS FOR USE:
+
+HOW TO CALCULATE ENGAGEMENT RATE:
+"Engagement Rate (%) = ((Avg Likes + Avg Comments) / Follower Count) * 100"
+
+Example calculation:
+- Follower Count: 45000
+- Avg Likes: 3500
+- Avg Comments: 120
+- Engagement Rate = ((3500 + 120) / 45000) * 100 = 8.04%
+
+FORMULA FOR SPREADSHEET PROGRAMS:
+"If using Google Sheets or Excel, use this formula in the Engagement Rate column (assuming row 2):"
+"=((D2+E2)/C2)*100"
+"Then drag the formula down to apply to all rows"
+
+CONTACT STATUS OPTIONS:
+"Not Contacted, DM Sent, No Response, Responded - Not Interested, Responded - Interested, Testing Product, Posted Content, Ongoing Partner"
+
+CONTENT TYPE CATEGORIES:
+"College Party Content, Imposter Game Videos, Greek Life Content, Friend Group Vlogs, Among Us Content, College Lifestyle, Dating/Relationship, Comedy Skits, Gaming Content, Icebreaker Games"
+
+PRIORITY LEVELS:
+"High = Perfect fit, 10k-100k followers, 5%+ engagement"
+"Medium = Good fit, engaging audience, smaller following"
+"Low = Possible fit, worth trying but not priority"
+
+SORTING TIPS:
+"1. Sort by Priority (High → Medium → Low) to focus on best opportunities"
+"2. Sort by Engagement Rate (highest first) to find most engaging creators"
+"3. Sort by Contact Status to see who needs follow-up"
+"4. Sort by Code Uses to see which creators drive most traffic"
+
+TRACKING WORKFLOW:
+"1. Find creator on TikTok"
+"2. Add their info to this spreadsheet"
+"3. Calculate engagement rate manually or use formula"
+"4. Assign priority based on fit + engagement"
+"5. Send DM using templates"
+"6. Update Contact Status as you go"
+"7. Track promo code usage weekly"
+"8. Follow up with successful creators"
+
+WEEKLY REVIEW CHECKLIST:
+"□ Update Last Post Date for creators you're tracking"
+"□ Follow up on 'No Response' creators after 3 days (once only)"
+"□ Check promo code usage and update Code Uses column"
+"□ Move successful creators to 'Ongoing Partner' status"
+"□ Remove low-priority creators who don't respond (make room for new ones)"
+"□ Add 10-20 new creators each week"
+
+GOAL METRICS:
+"- Send DMs to 50-100 creators total"
+"- 10% response rate = 5-10 responses"
+"- 2-5% post rate = 1-2 posts from creators"
+"- Each successful post should bring 50+ new users"
+
+DATA SOURCES FOR FINDING CREATORS:
+"1. TikTok search: 'college pregame' 'party games' 'imposter game' 'among us irl'"
+"2. Hashtags: #college #pregame #partygames #collegelife #greeklife"
+"3. Look at who comments on similar creators (engaged community)"
+"4. Check 'For You' page while signed into account that watches party content"
+
+EXPORT INSTRUCTIONS:
+"Save as .csv file to import into Google Sheets, Excel, Airtable, or Notion"
+"To open: Right-click file → Open With → Google Sheets (or Excel)"
