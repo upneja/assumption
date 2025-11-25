@@ -37,19 +37,24 @@ export type GamePhase =
  * Imposter Game Phase
  *
  * State machine flow:
- * LOBBY → SECRET_REVEAL → VOTING → REVEAL
- *          ↑_________________________|
+ * LOBBY → SECRET_REVEAL → CLUE → VOTING → GAME_OVER
+ *          ↑___________________________________|
+ *                      (or REVEAL for multi-round)
  *
  * - LOBBY: Pre-game waiting room, host selects topic
  * - SECRET_REVEAL: Civilians see topic+secret word, imposters see only topic
+ * - CLUE: Optional phase where players can submit clues (handled offline)
  * - VOTING: Players vote on who they think is the imposter (discussion happens IRL)
- * - REVEAL: Show elimination result, check win conditions, start next round or end game
+ * - REVEAL: Show elimination result, check win conditions (for multi-round games)
+ * - GAME_OVER: Final game state after voting completes
  */
 export type ImposterPhase =
   | 'LOBBY'
   | 'SECRET_REVEAL'
+  | 'CLUE'
   | 'VOTING'
-  | 'REVEAL';
+  | 'REVEAL'
+  | 'GAME_OVER';
 
 /**
  * Union type for any room state across both games.
