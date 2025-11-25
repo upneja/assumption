@@ -1,7 +1,8 @@
 'use client';
 
-import { useMemo } from 'react';
+import { useMemo, useEffect } from 'react';
 import { Player, Assignment, Vote } from '@/types';
+import { hapticsSuccess, hapticsError } from '@/lib/haptics';
 
 interface RevealViewProps {
   hotseatPlayer: Player | null;
@@ -47,6 +48,19 @@ export function RevealView({
     if (!vote) return null;
     return players.find((p) => p.id === vote.guessed_target_id) || null;
   };
+
+  // Haptic feedback on reveal
+  useEffect(() => {
+    // Trigger appropriate haptic based on whether current player voted correctly
+    const currentPlayerId = voteResults?.correctVoterIds.find((id) =>
+      players.some(p => p.id === id)
+    );
+    if (currentPlayerId) {
+      hapticsSuccess(); // Success haptic if player voted correctly
+    } else {
+      hapticsError(); // Error haptic if player voted incorrectly or didn't vote
+    }
+  }, [voteResults, players]);
 
   const confettiBits = useMemo(
     () =>

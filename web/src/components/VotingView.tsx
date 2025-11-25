@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { Player } from '@/types';
+import { hapticsLight, hapticsMedium } from '@/lib/haptics';
 
 interface VotingViewProps {
   hotseatPlayer: Player | null;
@@ -32,8 +33,14 @@ export function VotingView({
   // Voting options: everyone except the hotseat player
   const votingOptions = players.filter((p) => p.id !== hotseatPlayer?.id);
 
+  const handleSelectPlayer = (playerId: string) => {
+    setSelectedPlayer(playerId);
+    hapticsLight(); // Light haptic for selection
+  };
+
   const handleSubmitVote = () => {
     if (selectedPlayer) {
+      hapticsMedium(); // Medium haptic for vote submission
       onVote(selectedPlayer);
     }
   };
@@ -103,7 +110,7 @@ export function VotingView({
                 {votingOptions.map((player) => (
                   <button
                     key={player.id}
-                    onClick={() => setSelectedPlayer(player.id)}
+                    onClick={() => handleSelectPlayer(player.id)}
                     disabled={isLoading}
                     className={`w-full py-4 px-6 rounded-xl font-semibold text-lg transition-all ${
                       selectedPlayer === player.id

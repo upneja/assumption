@@ -20,11 +20,12 @@ describe('session', () => {
     expect(localStorage.getItem(key)).toBeNull();
   });
 
-  it('throws on the server', () => {
+  it('returns empty string on the server (for SSR/static export)', () => {
     const original = global.window;
     // @ts-expect-error testing server guard
     delete (global as any).window;
-    expect(() => getSessionId()).toThrow('getSessionId can only be called on the client');
+    const sessionId = getSessionId();
+    expect(sessionId).toBe('');
     (global as any).window = original;
   });
 });

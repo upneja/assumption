@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { Player } from '@/types';
+import { hapticsMedium, hapticsHeavy } from '@/lib/haptics';
 
 interface WheelViewProps {
   players: Player[];
@@ -75,6 +76,7 @@ export function WheelView({
     displayedIndexRef.current = startIndex;
     setDisplayedIndex(startIndex);
     setPhase('spinning');
+    hapticsMedium(); // Haptic feedback when spin starts
   }, [activeSpin, spinEligiblePlayers.length, targetIndex]);
 
   // Reset state when spin completes
@@ -117,6 +119,7 @@ export function WheelView({
       }
 
       setPhase('reveal');
+      hapticsHeavy(); // Heavy haptic for dramatic reveal
       createParticles();
       if (!hasCompletedRef.current) {
         hasCompletedRef.current = true;

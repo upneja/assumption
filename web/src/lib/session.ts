@@ -82,8 +82,9 @@ function generateSessionId(): string {
  */
 export function getSessionId(): string {
   // Server-side guard: localStorage doesn't exist in Node.js
+  // For static export builds, return empty string - actual value will be set on client
   if (typeof window === 'undefined') {
-    throw new Error('getSessionId can only be called on the client');
+    return '';
   }
 
   // Try to retrieve existing session
