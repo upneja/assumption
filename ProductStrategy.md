@@ -115,27 +115,27 @@ npx cap open ios
 
 ## Part 3: The 4-Week Launch Roadmap
 
-### Week 1: Build iOS App
+### Milestone 1: Working iOS App (Target: ~Week 1)
 
-**Monday-Tuesday: Capacitor Setup**
-- [ ] Install Capacitor (commands above)
+**Phase 1A: Capacitor Setup**
+- [ ] Install Capacitor dependencies
 - [ ] Configure static export in `next.config.ts`
-- [ ] Test web app still works after changes
-- [ ] Set up iOS project
+- [ ] Test web app still works after static export changes
+- [ ] Set up iOS project (`npx cap add ios`)
 
-**Wednesday-Thursday: Mobile Polish**
+**Phase 1B: Mobile Polish**
 - [ ] Add iOS safe area handling (`viewport-fit=cover`)
 - [ ] Test cross-platform lobbies (web + mobile join same room)
 - [ ] Add `@capacitor/haptics` plugin (vote, wheel spin, reveal)
 - [ ] Test on real iPhone (borrow if needed)
 
-**Friday: Apple Setup**
+**Phase 1C: TestFlight Distribution**
 - [ ] Create Apple Developer account ($99 - your ONLY cost)
 - [ ] Generate app icon using Canva
 - [ ] Upload build to TestFlight
 - [ ] Invite 5 friends to beta test
 
-**Weekend: Content Creation**
+**Phase 1D: Beta Testing & Content**
 - [ ] Host in-person game session with beta testers
 - [ ] Film everything (reactions = TikTok gold)
 - [ ] Create 3 TikTok videos (beta testing, teaser, building in public)
@@ -145,15 +145,15 @@ npx cap open ios
 
 ---
 
-### Week 2: Pre-Launch Preparation
+### Milestone 2: App Store Submission (Target: ~Week 2)
 
-**Monday-Tuesday: Bug Fixes & Polish**
+**Phase 2A: Bug Fixes & Features**
 - [ ] Fix critical bugs from beta feedback
 - [ ] Add native share sheet (`@capacitor/share`) for room codes
 - [ ] Create splash screen
 - [ ] Verify Supabase Realtime works in production
 
-**Wednesday: App Store Assets**
+**Phase 2B: App Store Assets**
 
 **App Name**: "pregame.lol - Party Games"
 **Subtitle**: "Imposter, Assumptions & More"
@@ -193,27 +193,27 @@ Perfect for pregames, parties, road trips. Download now.
 4. Gameplay: Voting screen
 5. Gameplay: Reveal screen
 
-**Thursday: Submit to App Store**
+**Phase 2C: Submission & Pre-Launch**
 - [ ] Complete App Store Connect submission
-- [ ] If rejected, address issues immediately
-
-**Friday-Weekend: Marketing Prep**
+- [ ] If rejected, address issues immediately and resubmit
 - [ ] Build Reddit karma (comment on 10+ posts in r/internetisbeautiful)
 - [ ] Create Product Hunt "Coming Soon" page
 - [ ] Identify 50 micro-influencers on TikTok (save to spreadsheet)
 - [ ] Expand TestFlight to 20-30 beta testers
 
-**Success Criteria**: App submitted, marketing ready, 20+ beta testers
+**Success Criteria**: App submitted to Apple, marketing channels prepped, 20+ beta testers
 
 ---
 
-### Week 3: Launch Week 🚀
+### Milestone 3: Public Launch (Target: ~Week 3)
 
-**The Launch Sequence** (Sequential, Not Simultaneous)
+**The Launch Sequence** (Do These In Order)
 
-#### **Tuesday: REDDIT LAUNCH** (Primary Validation)
+#### **Step 1: REDDIT LAUNCH** (Primary Validation)
 
-**8:00 AM EST** - Post to r/internetisbeautiful
+**When to Launch**: Tuesday-Thursday morning (8-10am EST for best traffic)
+
+**Post to**: r/internetisbeautiful
 
 **Title**:
 > "I made a site where you and your friends can play the TikTok imposter game without everyone downloading an app"
@@ -230,11 +230,13 @@ Perfect for pregames, parties, road trips. Download now.
 
 **Why Reddit First?** Zero cost validation. If this works, you have proof before spending money on anything else.
 
-#### **Wednesday: PRODUCT HUNT LAUNCH** (If Reddit Shows Traction)
+---
 
-**12:01 AM PST** - Launch on Product Hunt
+#### **Step 2: PRODUCT HUNT LAUNCH** (If Reddit Shows Traction)
 
-**First Comment**:
+**When to Launch**: 12:01 AM PST (gives you full 24 hours to accumulate votes)
+
+**First Comment Template**:
 > "Hey Product Hunt! 👋 I built pregame.lol after watching my friends struggle with buggy imposter apps.
 >
 > What makes us different: Your friends don't need the app—they can join from a browser. Zero friction.
@@ -243,48 +245,57 @@ Perfect for pregames, parties, road trips. Download now.
 >
 > Thanks for checking us out!"
 
-**All Day**: Answer every question within 5 minutes
+**Launch Day Tasks**:
+- [ ] Answer every question within 5 minutes
+- [ ] Share PH link on Twitter, Reddit, Discord
+- [ ] DM supporters asking for upvotes
 
 **Expected Results**:
 - 20% chance of getting featured (2025 algorithm is tough)
 - 50-300 upvotes (not featured), 500+ (if featured)
 - 500-2,000 downloads
 
-#### **Thursday-Friday: TikTok Organic Content**
+---
+
+#### **Step 3: TikTok Organic Content** (During Launch Week)
 
 **Content Strategy**:
 1. "We launched on Reddit and got 10K users in 24 hours" (social proof)
 2. "POV: Playing imposter but friends don't need to download anything" (feature)
 3. Film real friend group playing (authentic reactions)
 
-**Posting**: 1 video/day during launch week
+**Posting Cadence**: 1 video/day during launch week
 
-**Weekend: Analyze & Iterate**
+---
+
+#### **Step 4: Analyze & Iterate** (After Launch)
+
 - [ ] Review metrics: Which channel drove most downloads?
 - [ ] User interviews: DM 10 active users
-- [ ] Plan Week 4 based on data
+- [ ] Identify what's working, double down on it
 
 **Success Criteria**: 5,000-10,000 downloads, 4.5+ star rating
 
 ---
 
-### Week 4: Sustain & Scale
+### Milestone 4: Sustained Growth (Target: ~Week 4+)
 
-**Monday-Wednesday: Community Engagement**
-- [ ] Respond to ALL App Store reviews
+**Phase 4A: Community Management**
+- [ ] Respond to ALL App Store reviews (thank positive, fix bugs from negative)
 - [ ] Follow up with creators who showed interest
-- [ ] Post "Launch week recap" (TikTok, Twitter, Reddit)
+- [ ] Post "Launch week recap" on TikTok, Twitter, Reddit
 - [ ] Ship Version 1.1 with top bug fixes
 
-**Thursday-Friday: Optimization**
-- [ ] Analyze conversion funnel
+**Phase 4B: Growth Optimization**
+- [ ] Analyze conversion funnel (where are users dropping off?)
 - [ ] A/B test App Store screenshots if conversion is low
-- [ ] Refine ASO keywords based on search data
+- [ ] Refine ASO keywords based on actual search data
+- [ ] Plan features based on user feedback
 
-**Weekend: Strategic Planning**
+**Phase 4C: Long-term Planning**
 - [ ] Review Month 1 metrics
 - [ ] Decide: What worked? Double down on that channel
-- [ ] Plan Month 2: TikTok-focused growth
+- [ ] Plan Month 2: Shift to TikTok-focused growth
 
 **Success Criteria**: 1,000+ daily active users, 20%+ Day 7 retention
 
@@ -620,35 +631,46 @@ students. Format: [3-second hook | concept | CTA]"
 
 ## Part 10: Your Next Move
 
-### Today (Next 24 Hours)
+### Start Here (Your First Tasks)
 
-1. ✅ **Read this entire strategy** (30 minutes)
-2. ✅ **Set up Apple Developer account** ($99)
-3. ✅ **Initialize Capacitor**:
-   ```bash
-   npm install @capacitor/core @capacitor/cli
-   npx cap init pregame lol.pregame.app
-   npx cap add ios
-   ```
-4. ✅ **Build and run on iOS simulator**
-5. ✅ **Mark Week 3 launch date on calendar** (3 weeks from today)
+**Task 1: Read & Internalize**
+- [ ] Read this entire strategy (30 minutes)
+- [ ] Print the Quick Reference Card
+- [ ] Review the 3 Strategic Pillars (Part 0)
 
-### This Week (Next 7 Days)
+**Task 2: Set Up Accounts**
+- [ ] Create Apple Developer account ($99 - your only required cost)
+- [ ] Set up TikTok account (@pregame.lol)
+- [ ] Create Reddit account (if you don't have one)
 
-- [ ] Working iOS app on your physical iPhone
-- [ ] Cross-platform lobby tested (web + mobile together)
-- [ ] Haptic feedback on 3+ interactions
-- [ ] TestFlight build sent to 5 friends
-- [ ] First TikTok video posted
+**Task 3: Initialize Capacitor**
+```bash
+npm install @capacitor/core @capacitor/cli
+npx cap init pregame lol.pregame.app
+npx cap add ios
+```
+- [ ] Build and run on iOS simulator
+- [ ] Message Claude: "Capacitor initialized. What's next?"
 
-### This Month (Next 30 Days)
+**Then**: Work through Milestone 1 → 2 → 3 → 4 at your own pace
 
-- [ ] App Store approved and live
-- [ ] Reddit launch on r/internetisbeautiful
-- [ ] Product Hunt launch
+### Milestone Targets (Flexible Timeframe)
+
+**Milestone 1** (estimate: ~1 week if working full-time, ~2-3 weeks part-time)
+- [ ] Working iOS app on TestFlight
+- [ ] 5 beta testers playing
+
+**Milestone 2** (estimate: ~1 week after Milestone 1)
+- [ ] App submitted to Apple
+- [ ] Marketing channels prepped
+
+**Milestone 3** (estimate: ~1 week after App Store approval)
+- [ ] Reddit + Product Hunt + TikTok launches
 - [ ] 5,000-10,000 downloads
-- [ ] 4.5+ star rating
-- [ ] 20%+ Day 7 retention (validates product-market fit)
+
+**Milestone 4** (estimate: ongoing after Milestone 3)
+- [ ] 1,000+ daily active users
+- [ ] 20%+ Day 7 retention (product-market fit validated)
 
 ---
 
@@ -656,32 +678,34 @@ students. Format: [3-second hook | concept | CTA]"
 
 ```
 ┌──────────────────────────────────────────────────────┐
-│        PREGAME.LOL - 4-WEEK LAUNCH CHECKLIST         │
+│       PREGAME.LOL - LAUNCH MILESTONE TRACKER         │
 ├──────────────────────────────────────────────────────┤
 │                                                       │
-│  WEEK 1: Build iOS App                               │
-│   [ ] Install Capacitor                              │
-│   [ ] Test on real iPhone                            │
+│  MILESTONE 1: Working iOS App                        │
+│   [ ] Set up Capacitor + static export               │
+│   [ ] Add iOS safe areas + haptics                   │
+│   [ ] Test cross-platform lobbies                    │
 │   [ ] Upload to TestFlight                           │
 │   [ ] 5 beta testers playing                         │
 │                                                       │
-│  WEEK 2: Pre-Launch Prep                             │
-│   [ ] Fix critical bugs                              │
-│   [ ] Create App Store assets                        │
+│  MILESTONE 2: App Store Ready                        │
+│   [ ] Fix critical bugs from beta                    │
+│   [ ] Create App Store assets (icon, screenshots)    │
 │   [ ] Submit to Apple                                │
 │   [ ] Build Reddit karma (10+ comments)              │
+│   [ ] 20+ beta testers                               │
 │                                                       │
-│  WEEK 3: Launch Week 🚀                              │
-│   [ ] Tuesday: Launch on Reddit                      │
-│   [ ] Wednesday: Launch on Product Hunt              │
-│   [ ] Daily TikTok content                           │
-│   [ ] Start influencer outreach                      │
+│  MILESTONE 3: Public Launch 🚀                       │
+│   [ ] Launch on Reddit (r/internetisbeautiful)       │
+│   [ ] Launch on Product Hunt (if Reddit works)       │
+│   [ ] Post TikTok content during launch              │
+│   [ ] DM 20+ influencers (product gifting)           │
 │                                                       │
-│  WEEK 4: Sustain & Scale                             │
-│   [ ] Respond to all reviews                         │
+│  MILESTONE 4: Sustained Growth                       │
+│   [ ] Respond to all App Store reviews               │
 │   [ ] Follow up with creators                        │
-│   [ ] Ship Version 1.1                               │
-│   [ ] Plan Month 2 (TikTok focus)                    │
+│   [ ] Ship Version 1.1 bug fixes                     │
+│   [ ] Analyze what worked, double down               │
 │                                                       │
 │  SUCCESS METRICS:                                     │
 │   5,000+ downloads | 4.5★ rating | 20% D7 retention  │
